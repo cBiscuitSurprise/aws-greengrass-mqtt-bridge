@@ -22,8 +22,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -47,17 +50,17 @@ public class MQTTClientTest {
     @Mock
     private MQTTClientKeyStore mockMqttClientKeyStore;
 
-    private ScheduledExecutorService ses;
+    private ExecutorService executorService;
 
     @BeforeEach
     void setup() {
         fakeMqttClient = new FakeMqttClient(CLIENT_ID);
-        ses = new ScheduledThreadPoolExecutor(1);
+        executorService = Executors.newCachedThreadPool();
     }
 
     @AfterEach
     void tearDown() {
-        ses.shutdownNow();
+        executorService.shutdownNow();
     }
 
     @Test
@@ -68,7 +71,7 @@ public class MQTTClientTest {
                 .username("")
                 .password("")
                 .mqttClientKeyStore(mockMqttClientKeyStore)
-                .executorService(ses)
+                .executorService(executorService)
                 .build(), fakeMqttClient);
         mqttClient.start();
         fakeMqttClient.waitForConnect(1000);
@@ -84,7 +87,7 @@ public class MQTTClientTest {
                 .username("")
                 .password("")
                 .mqttClientKeyStore(mockMqttClientKeyStore)
-                .executorService(ses)
+                .executorService(executorService)
                 .build(), fakeMqttClient);
         mqttClient.start();
         fakeMqttClient.waitForConnect(1000);
@@ -113,7 +116,7 @@ public class MQTTClientTest {
                 .username("")
                 .password("")
                 .mqttClientKeyStore(mockMqttClientKeyStore)
-                .executorService(ses)
+                .executorService(executorService)
                 .build(), fakeMqttClient);
         mqttClient.start();
         fakeMqttClient.waitForConnect(1000);
@@ -169,7 +172,7 @@ public class MQTTClientTest {
                 .username("")
                 .password("")
                 .mqttClientKeyStore(mockMqttClientKeyStore)
-                .executorService(ses)
+                .executorService(executorService)
                 .build(), fakeMqttClient);
         mqttClient.start();
         fakeMqttClient.waitForConnect(1000);
@@ -203,7 +206,7 @@ public class MQTTClientTest {
                 .username("")
                 .password("")
                 .mqttClientKeyStore(mockMqttClientKeyStore)
-                .executorService(ses)
+                .executorService(executorService)
                 .build(), fakeMqttClient);
 
         mqttClient.start();
@@ -231,11 +234,14 @@ public class MQTTClientTest {
                 .username("")
                 .password("")
                 .mqttClientKeyStore(mockMqttClientKeyStore)
-                .executorService(ses)
+                .executorService(executorService)
                 .build(), fakeMqttClient);
 
-        mqttClient.start();
+        CompletableFuture<Void> here = mqttClient.start();
         fakeMqttClient.waitForConnect(1000);
+        here.get();
+
+        System.out.println("after first connect");
 
         Set<String> topics = new HashSet<>();
         topics.add("mqtt/topic");
@@ -243,7 +249,11 @@ public class MQTTClientTest {
         mqttClient.updateSubscriptions(topics, message -> {
         });
 
+        System.out.println("after subscription update");
+
         fakeMqttClient.injectConnectionLoss();
+
+        System.out.println("after recconect");
 
         assertThat(fakeMqttClient.isConnected(), is(true));
         assertThat(fakeMqttClient.getConnectCount(), is(2));
@@ -259,7 +269,7 @@ public class MQTTClientTest {
                 .username("")
                 .password("")
                 .mqttClientKeyStore(mockKeyStore)
-                .executorService(ses)
+                .executorService(executorService)
                 .build(), fakeMqttClient);
 
         mqttClient.start();
@@ -289,7 +299,7 @@ public class MQTTClientTest {
                 .username("user")
                 .password("password")
                 .mqttClientKeyStore(mockKeyStore)
-                .executorService(ses)
+                .executorService(executorService)
                 .build(), fakeMqttClient);
 
         mqttClient.start();
@@ -308,7 +318,7 @@ public class MQTTClientTest {
                         .username("")
                         .password("password")
                         .mqttClientKeyStore(mockMqttClientKeyStore)
-                        .executorService(ses)
+                        .executorService(executorService)
                         .build(), fakeMqttClient));
     }
 }

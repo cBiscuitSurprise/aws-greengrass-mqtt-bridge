@@ -159,7 +159,10 @@ public class MQTTBridge extends PluginService {
 
         try {
             mqttClient = mqttClientFactory.get();
-            mqttClient.start();
+            mqttClient.start().exceptionally(t -> {
+                serviceErrored(t);
+                return null;
+            });
             messageBridge.addOrReplaceMessageClient(TopicMapping.TopicType.LocalMqtt, mqttClient);
         } catch (MQTTClientException e) {
             serviceErrored(e);
