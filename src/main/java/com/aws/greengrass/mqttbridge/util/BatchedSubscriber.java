@@ -13,9 +13,8 @@ import com.aws.greengrass.config.Topics;
 import com.aws.greengrass.config.WhatHappened;
 import lombok.NonNull;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
@@ -48,11 +47,11 @@ public final class BatchedSubscriber implements ChildChanged, Subscriber {
             what == WhatHappened.timestampUpdated || what == WhatHappened.interiorAdded;
 
     private final AtomicInteger numRequestedChanges = new AtomicInteger();
-    private final List<Node> whatChanged = new ArrayList<>();
+    private final Set<Node> whatChanged = new HashSet<>();
 
     private final Node node;
     private final BiPredicate<WhatHappened, Node> exclusions;
-    private final BiConsumer<WhatHappened, List<Node>> callback;
+    private final BiConsumer<WhatHappened, Set<Node>> callback;
 
     /**
      * Constructs a new BatchedSubscriber.
@@ -62,7 +61,7 @@ public final class BatchedSubscriber implements ChildChanged, Subscriber {
      * @param topic    topic to subscribe to
      * @param callback action to perform after a <i>batch</i> of changes and on initialization
      */
-    public BatchedSubscriber(Topic topic, BiConsumer<WhatHappened, List<Node>> callback) {
+    public BatchedSubscriber(Topic topic, BiConsumer<WhatHappened, Set<Node>> callback) {
         this(topic, BASE_EXCLUSION, callback);
     }
 
@@ -75,7 +74,7 @@ public final class BatchedSubscriber implements ChildChanged, Subscriber {
      */
     public BatchedSubscriber(Topic topic,
                              BiPredicate<WhatHappened, Node> exclusions,
-                             BiConsumer<WhatHappened, List<Node>> callback) {
+                             BiConsumer<WhatHappened, Set<Node>> callback) {
         this((Node) topic, exclusions, callback);
     }
 
@@ -87,7 +86,7 @@ public final class BatchedSubscriber implements ChildChanged, Subscriber {
      * @param topics   topics to subscribe to
      * @param callback action to perform after a <i>batch</i> of changes and on initialization
      */
-    public BatchedSubscriber(Topics topics, BiConsumer<WhatHappened, List<Node>> callback) {
+    public BatchedSubscriber(Topics topics, BiConsumer<WhatHappened, Set<Node>> callback) {
         this(topics, BASE_EXCLUSION, callback);
     }
 
@@ -100,7 +99,7 @@ public final class BatchedSubscriber implements ChildChanged, Subscriber {
      */
     public BatchedSubscriber(Topics topics,
                              BiPredicate<WhatHappened, Node> exclusions,
-                             BiConsumer<WhatHappened, List<Node>> callback) {
+                             BiConsumer<WhatHappened, Set<Node>> callback) {
         this((Node) topics, exclusions, callback);
     }
 
@@ -113,7 +112,7 @@ public final class BatchedSubscriber implements ChildChanged, Subscriber {
      */
     private BatchedSubscriber(@NonNull Node node,
                               BiPredicate<WhatHappened, Node> exclusions,
-                              @NonNull BiConsumer<WhatHappened, List<Node>> callback) {
+                              @NonNull BiConsumer<WhatHappened, Set<Node>> callback) {
         this.node = node;
         this.exclusions = exclusions;
         this.callback = callback;
@@ -153,17 +152,24 @@ public final class BatchedSubscriber implements ChildChanged, Subscriber {
             return;
         }
 
+        if (child != null) {
+            synchronized (whatChanged) {
+                whatChanged.add(child);
+            }
+        }
+
         if (what == WhatHappened.initialized) {
-            // Topic returns itself on initialization, Topics returns null
-            callback.accept(what, child == null ? Collections.emptyList() : Collections.singletonList(child));
+            callback.accept(what, whatChanged);
+            whatChanged.clear();
             return;
         }
 
-        synchronized (whatChanged) {
-            whatChanged.add(child);
+        if (child == null) {
+            return;
         }
 
         numRequestedChanges.incrementAndGet();
+
         child.context.runOnPublishQueue(() -> {
             if (numRequestedChanges.decrementAndGet() == 0) {
                 synchronized (whatChanged) {
