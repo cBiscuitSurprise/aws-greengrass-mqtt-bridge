@@ -39,9 +39,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyStoreException;
 import java.security.cert.CertificateException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -125,12 +125,7 @@ public class MQTTBridge extends PluginService {
             return;
         }
 
-        try {
-            certificateAuthorityChangeHandler.start();
-        } catch (ServiceLoadException e) {
-            serviceErrored(e);
-            return;
-        }
+        certificateAuthorityChangeHandler.start();
 
         try {
             mqttClient = new MQTTClient(brokerUri, clientId, mqttClientKeyStore, executorService);
@@ -173,50 +168,36 @@ public class MQTTBridge extends PluginService {
 
         private BatchedSubscriber subscriber;
 
-        @SuppressWarnings({"PMD.UnusedFormalParameter"})
-        private void onCAChange(WhatHappened what, Set<Node> whatChanged) {
-            maybeFindCATopic()
+        private void onCAChange() {
+            findCATopic()
                     .map(Coerce::toStringList)
                     .filter(certs -> !Utils.isEmpty(certs))
-                    .ifPresent(certs -> {
-                        logger.atDebug().kv("numCaCerts", certs.size()).log("CA update received");
-                        try {
-                            mqttClientKeyStore.updateCA(certs);
-                        } catch (IOException | CertificateException | KeyStoreException e) {
-                            serviceErrored(e);
-                        }
-                    });
+                    .ifPresent(this::updateCA);
+        }
+
+        private void updateCA(List<String> certs) {
+            logger.atDebug().kv("numCaCerts", certs.size()).log("CA update received");
+            try {
+                mqttClientKeyStore.updateCA(certs);
+            } catch (IOException | CertificateException | KeyStoreException e) {
+                serviceErrored(e);
+            }
         }
 
         /**
          * Begin listening and responding to CDA CA changes.
          *
          * <p>This operation is idempotent.
-         *
-         * @throws ServiceLoadException if CDA service could not be loaded
          */
-        public void start() throws ServiceLoadException {
+        public void start() {
             if (subscriber == null) {
-                subscriber = new BatchedSubscriber(findCATopic(), this::onCAChange);
+                Topic caTopic = findCATopic().orElse(null);
+                if (caTopic == null) {
+                    return;
+                }
+                subscriber = new BatchedSubscriber(caTopic, (what, whatChanged) -> onCAChange());
             }
             subscriber.subscribe();
-        }
-
-        private Optional<Topic> maybeFindCATopic() {
-            try {
-                return Optional.of(findCATopic());
-            } catch (ServiceLoadException e) {
-                serviceErrored(e);
-                return Optional.empty();
-            }
-        }
-
-        private Topic findCATopic() throws ServiceLoadException {
-            return kernel
-                    .locate(ClientDevicesAuthService.CLIENT_DEVICES_AUTH_SERVICE_NAME).getConfig()
-                    .lookup(RUNTIME_STORE_NAMESPACE_TOPIC,
-                            ClientDevicesAuthService.CERTIFICATES_KEY,
-                            ClientDevicesAuthService.AUTHORITIES_TOPIC);
         }
 
         /**
@@ -225,6 +206,19 @@ public class MQTTBridge extends PluginService {
         public void stop() {
             if (subscriber != null) {
                 subscriber.unsubscribe();
+            }
+        }
+
+        private Optional<Topic> findCATopic() {
+            try {
+                return Optional.of(kernel
+                        .locate(ClientDevicesAuthService.CLIENT_DEVICES_AUTH_SERVICE_NAME).getConfig()
+                        .lookup(RUNTIME_STORE_NAMESPACE_TOPIC,
+                                ClientDevicesAuthService.CERTIFICATES_KEY,
+                                ClientDevicesAuthService.AUTHORITIES_TOPIC));
+            } catch (ServiceLoadException e) {
+                logger.atWarn().cause(e).log("unable to locate service");
+                return Optional.empty();
             }
         }
     }
