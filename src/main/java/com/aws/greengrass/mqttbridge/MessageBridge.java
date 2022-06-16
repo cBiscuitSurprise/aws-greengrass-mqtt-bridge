@@ -154,8 +154,8 @@ public class MessageBridge {
             // an empty string)
             // Still keeping the value as a pair of topic string and target type because we want to support mapping
             // to different topics in the future.
-            sourceDestinationMap.computeIfAbsent(mappingEntry.getTopic(), k -> new ArrayList<>())
-                    .add(new Pair<>("", mappingEntry.getTarget()));
+            sourceDestinationMap.computeIfAbsent(mappingEntry.getSourceTopic(), k -> new ArrayList<>())
+                    .add(new Pair<>(mappingEntry.getTargetTopic(), mappingEntry.getTarget()));
         });
 
         perClientSourceDestinationMap = perClientSourceDestinationMapTemp;

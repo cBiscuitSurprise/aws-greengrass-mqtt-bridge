@@ -41,15 +41,40 @@ public class TopicMapping {
     @EqualsAndHashCode
     public static class MappingEntry {
         @Getter
-        private String topic;
+        private String sourceTopic;
         @Getter
         private TopicType source;
+        private String targetTopic;
         @Getter
         private TopicType target;
 
+        // backwards compatibility with `topic` configuration
+        public void setTopic(String value) {
+            sourceTopic = value;
+        }
+
+        public String getTargetTopic() {
+            if (targetTopic != null) {
+                return targetTopic;
+            } else {
+                // downstream logic will use the _actual_ source-topic (i.e.
+                // with wildcards expanded) to send to the target-integration if
+                // target-topic is an empty string
+                return "";
+            }
+        }
+
+        // used for implicit target-topic (equals source-topic)
+        public MappingEntry(String topic, TopicType source, TopicType target) {
+            this.sourceTopic = topic;
+            this.source = source;
+            this.target = target;
+        }
+
         @Override
         public String toString() {
-            return String.format("{topic: %s, source: %s, target: %s}", topic, source, target);
+            return String.format("{source-topic: %s, source: %s, target-topic: %s, target: %s}"
+                , sourceTopic, source, targetTopic, target);
         }
     }
 
