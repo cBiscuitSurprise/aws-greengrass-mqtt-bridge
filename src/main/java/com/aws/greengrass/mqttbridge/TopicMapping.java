@@ -48,23 +48,40 @@ public class TopicMapping {
         @Getter
         private TopicType target;
 
-        // backwards compatibility with `topic` configuration
+        /**
+         * Set the `sourceTopic` through `topic`.
+         * backwards compatibility with legacy `topic` configuration
+         * 
+         *
+         * @param value the value to set `sourceTopic` to
+         */
         public void setTopic(String value) {
             sourceTopic = value;
         }
 
+        /**
+         * Get `targetTopic` based on whether or not it's set.
+         *
+         * @return the value of `targetTopic` if set, otherwise an empty string
+         */
         public String getTargetTopic() {
-            if (targetTopic != null) {
-                return targetTopic;
-            } else {
+            if (targetTopic == null) {
                 // downstream logic will use the _actual_ source-topic (i.e.
                 // with wildcards expanded) to send to the target-integration if
                 // target-topic is an empty string
                 return "";
+            } else {
+                return targetTopic;                
             }
         }
 
-        // used for implicit target-topic (equals source-topic)
+        /**
+         * Get `targetTopic` based on whether or not it's set.
+         *
+         * @param topic the source topic to map from
+         * @param source the source integration to map from
+         * @param target the target integration to map to
+         */
         public MappingEntry(String topic, TopicType source, TopicType target) {
             this.sourceTopic = topic;
             this.source = source;
@@ -73,8 +90,8 @@ public class TopicMapping {
 
         @Override
         public String toString() {
-            return String.format("{source-topic: %s, source: %s, target-topic: %s, target: %s}"
-                , sourceTopic, source, targetTopic, target);
+            return String.format("{source-topic: %s, source: %s, target-topic: %s, target: %s}",
+                sourceTopic, source, targetTopic, target);
         }
     }
 
