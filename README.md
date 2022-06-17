@@ -1,3 +1,7 @@
+🧙🧙🧙 magic
+This is a patch which allows us to publish to our accounts rather than use the global AWS version of this component. See [BDC_README.md](BDC_README.md) for more info.
+🧙🧙🧙
+
 ## AWS Greengrass MQTT Bridge
 
 The MQTT bridge component (aws.greengrass.clientdevices.mqtt.Bridge) relays MQTT messages between client devices, local Greengrass publish/subscribe, and AWS IoT Core. You can use this component to act on MQTT messages from client devices in custom components and sync client devices with the AWS Cloud.

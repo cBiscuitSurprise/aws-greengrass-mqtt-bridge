@@ -17,3 +17,5 @@ jmh-result.json
 work
 bin
 /config
+.venv/
+__pycache__/
