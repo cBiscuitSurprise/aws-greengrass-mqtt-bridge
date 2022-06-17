@@ -41,23 +41,33 @@ public class TopicMapping {
     @EqualsAndHashCode
     public static class MappingEntry {
         @Getter
-        private String topic;
+        private String sourceTopic;
         @Getter
         private TopicType source;
         @Getter
+        private String targetTopic;
+        @Getter
         private TopicType target;
         private String targetTopicPrefix;
+        @Getter
+        private String targetPayloadTemplate;
 
         /**
-         * Get the configured target-topic.
+         * Get the source topic (provided for backwards compatibility).
          * 
-         * <p>Hard-coded to fit the legacy implementation where target-topic wasn't 
-         * configurable. This was represented by an empty string.</p>
-         *
-         * @return configured target topic
+         * @return the source-topic
          */
-        public String getTargetTopic() {
-            return "";
+        public String getTopic() {
+            return sourceTopic;
+        }
+
+        /**
+         * Set the source topic (provided for backwards compatibility).
+         *
+         * @param value the source topic string
+         */
+        public void setTopic(String value) {
+            sourceTopic = value;
         }
 
         /**
@@ -80,16 +90,18 @@ public class TopicMapping {
          * @param source the source integration to listen on
          * @param target the target integration to bridge to
          */
-        MappingEntry(String topic, TopicType source, TopicType target) {
-            this.topic = topic;
+        MappingEntry(String sourceTopic, TopicType source, TopicType target) {
+            this.sourceTopic = sourceTopic;
             this.source = source;
             this.target = target;
-            this.targetTopicPrefix = "";
         }
 
         @Override
         public String toString() {
-            return String.format("{topic: %s, source: %s, target: %s}", topic, source, target);
+            return String.format(
+                "{source-topic: %s, source: %s, target-topic: %s, target: %s, target-topic-prefix: %s, " 
+                    + "target-payload-template: %s}",
+                sourceTopic, source, targetTopic, target, targetTopicPrefix, targetPayloadTemplate);
         }
     }
 

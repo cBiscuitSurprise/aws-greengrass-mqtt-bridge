@@ -10,9 +10,12 @@ import com.aws.greengrass.logging.impl.LogManager;
 import com.aws.greengrass.mqtt.bridge.clients.MessageClient;
 import com.aws.greengrass.mqtt.bridge.clients.MessageClientException;
 import com.aws.greengrass.util.Utils;
+
+import org.apache.commons.text.StringSubstitutor;
 import org.eclipse.paho.client.mqttv3.MqttTopic;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -108,7 +111,27 @@ public class MessageBridge {
                             .kv(LOG_KEY_RESOLVED_TARGET_TOPIC, targetTopic)
                             .log("Message client not found for target type");
                 } else {
-                    Message msg = new Message(targetTopic, message.getPayload());
+                    byte[] targetPayload;
+                    if (Utils.isEmpty(mapping.getTargetPayloadTemplate())) {
+                        targetPayload = message.getPayload();
+                    } else {
+                        /* I couldn't find the actual implementation where 
+                         * gg-nucleus does the template replacements, so using
+                         * `StringSubstitutor` for this POC
+                         */
+                        Map<String, String> replacementsMap = new HashMap<String, String>();
+                        replacementsMap.put("sourceTopicPattern", mapping.getSourceTopic());
+                        replacementsMap.put("targetTopic", mapping.getTargetTopic());
+                        replacementsMap.put("source", mapping.getSource().toString());
+                        replacementsMap.put("target", mapping.getTarget().toString());
+                        replacementsMap.put("sourceTopic", message.getTopic());
+                        replacementsMap.put("sourcePayload:base64", Base64.getEncoder().encodeToString(message.getPayload()));
+                        replacementsMap.put("thingName", System.getenv("AWS_IOT_THING_NAME"));
+        
+                        StringSubstitutor sub = new StringSubstitutor(replacementsMap);
+                        targetPayload = sub.replace(mapping.getTargetPayloadTemplate()).getBytes();
+                    }
+                    Message msg = new Message(targetTopic, targetPayload);
                     try {
                         client.publish(msg);
                         LOGGER.atDebug().kv(LOG_KEY_SOURCE_TYPE, sourceType).kv(LOG_KEY_SOURCE_TOPIC, fullSourceTopic)
@@ -155,7 +178,7 @@ public class MessageBridge {
 
             // Add destinations for each source topic
             // TODO: Support more types of topic mapping.
-            sourceDestinationMap.computeIfAbsent(mappingEntry.getTopic(), k -> new ArrayList<>())
+            sourceDestinationMap.computeIfAbsent(mappingEntry.getSourceTopic(), k -> new ArrayList<>())
                     .add(mappingEntry);
         });
 

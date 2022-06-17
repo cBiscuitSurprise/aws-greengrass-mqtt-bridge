@@ -243,20 +243,48 @@ public class MQTTBridgeTest extends GGServiceTestUtil {
         assertThat(() -> topicMapping.getMapping().size(), EventuallyLambdaMatcher.eventuallyEval(is(5)));
         Map<String, TopicMapping.MappingEntry> expectedMapping = new HashMap<>();
         expectedMapping.put("mapping1",
-                new TopicMapping.MappingEntry("topic/to/map/from/local/to/cloud", TopicMapping.TopicType.LocalMqtt,
-                        TopicMapping.TopicType.IotCore));
+                new TopicMapping.MappingEntry(
+                        "topic/to/map/from/local/to/cloud",
+                        TopicMapping.TopicType.LocalMqtt,
+                        TopicMapping.TopicType.IotCore
+                )
+        );
         expectedMapping.put("mapping2",
-                new TopicMapping.MappingEntry("topic/to/map/from/local/to/pubsub", TopicMapping.TopicType.LocalMqtt,
-                        TopicMapping.TopicType.Pubsub));
+                new TopicMapping.MappingEntry(
+                        "topic/to/map/from/local/to/pubsub",
+                        TopicMapping.TopicType.LocalMqtt,
+                        TopicMapping.TopicType.Pubsub
+                )
+        );
         expectedMapping.put("mapping3",
-                new TopicMapping.MappingEntry("topic/to/map/from/local/to/cloud/2", TopicMapping.TopicType.LocalMqtt,
-                        TopicMapping.TopicType.IotCore));
-        expectedMapping.put("mapping4",
-                new TopicMapping.MappingEntry("topic/to/map/from/local/to/pubsub/2", TopicMapping.TopicType.LocalMqtt,
-                        TopicMapping.TopicType.Pubsub, "a-prefix"));
-        expectedMapping.put("mapping5",
-                new TopicMapping.MappingEntry("topic/to/map/from/local/to/cloud/3", TopicMapping.TopicType.LocalMqtt,
-                        TopicMapping.TopicType.IotCore, "a-prefix"));
+                new TopicMapping.MappingEntry(
+                        "topic/to/map/from/local/to/cloud/2",
+                        TopicMapping.TopicType.LocalMqtt,
+                        TopicMapping.TopicType.IotCore
+                )
+        );
+        expectedMapping.put(
+                "mapping4",
+                new TopicMapping.MappingEntry(
+                        "topic/to/map/from/local/to/pubsub/2",
+                        TopicMapping.TopicType.LocalMqtt,
+                        null,
+                        TopicMapping.TopicType.Pubsub,
+                        "a-prefix",
+                        null
+                )
+        );
+        expectedMapping.put(
+                "mapping5",
+                new TopicMapping.MappingEntry(
+                        "topic/to/map/from/local",
+                        TopicMapping.TopicType.LocalMqtt,
+                        "topic/to/map/to/cloud",
+                        TopicMapping.TopicType.IotCore,
+                        null,
+                        "${sourceTopic}::${sourcePayload:base64}"
+                )
+        );
 
         assertEquals(expectedMapping, topicMapping.getMapping());
     }

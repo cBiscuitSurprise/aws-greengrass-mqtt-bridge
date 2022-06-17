@@ -16,15 +16,16 @@ services:
           source: LocalMqtt
           target: IotCore
         mapping4:
-          topic: topic/to/map/from/local/to/pubsub/2
+          sourceTopic: topic/to/map/from/local/to/pubsub/2
           source: LocalMqtt
           target: Pubsub
           targetTopicPrefix: a-prefix
         mapping5:
-          topic: topic/to/map/from/local/to/cloud/3
+          sourceTopic: topic/to/map/from/local
           source: LocalMqtt
+          targetTopic: topic/to/map/to/cloud
           target: IotCore
-          targetTopicPrefix: a-prefix
+          targetPayloadTemplate: "${sourceTopic}::${sourcePayload:base64}"
   main:
     dependencies:
       - aws.greengrass.clientdevices.mqtt.Bridge
