@@ -10,7 +10,6 @@ import com.aws.greengrass.logging.impl.LogManager;
 import com.aws.greengrass.mqtt.bridge.clients.MessageClient;
 import com.aws.greengrass.mqtt.bridge.clients.MessageClientException;
 import com.aws.greengrass.util.Utils;
-
 import org.apache.commons.text.StringSubstitutor;
 import org.eclipse.paho.client.mqttv3.MqttTopic;
 
@@ -119,13 +118,14 @@ public class MessageBridge {
                          * gg-nucleus does the template replacements, so using
                          * `StringSubstitutor` for this POC
                          */
-                        Map<String, String> replacementsMap = new HashMap<String, String>();
+                        Map<String, String> replacementsMap = new HashMap<>();
                         replacementsMap.put("sourceTopicPattern", mapping.getSourceTopic());
                         replacementsMap.put("targetTopic", mapping.getTargetTopic());
                         replacementsMap.put("source", mapping.getSource().toString());
                         replacementsMap.put("target", mapping.getTarget().toString());
                         replacementsMap.put("sourceTopic", message.getTopic());
-                        replacementsMap.put("sourcePayload:base64", Base64.getEncoder().encodeToString(message.getPayload()));
+                        replacementsMap.put("sourcePayload:base64", 
+                            Base64.getEncoder().encodeToString(message.getPayload()));
                         replacementsMap.put("thingName", System.getenv("AWS_IOT_THING_NAME"));
         
                         StringSubstitutor sub = new StringSubstitutor(replacementsMap);

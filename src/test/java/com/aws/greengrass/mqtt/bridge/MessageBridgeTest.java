@@ -557,8 +557,8 @@ public class MessageBridgeTest {
 
         MessageBridge messageBridge = new MessageBridge(mapping);
 
-        messageBridge.addOrReplaceMessageClient(TopicMapping.TopicType.LocalMqtt, mockMqttClient);
-        messageBridge.addOrReplaceMessageClient(TopicMapping.TopicType.Pubsub, mockPubsubClient);
+        messageBridge.addOrReplaceMessageClientAndUpdateSubscriptions(TopicMapping.TopicType.LocalMqtt, mockMqttClient);
+        messageBridge.addOrReplaceMessageClientAndUpdateSubscriptions(TopicMapping.TopicType.Pubsub, mockPubsubClient);
 
         doReturn(true).when(mockMqttClient).supportsTopicFilters();
 
