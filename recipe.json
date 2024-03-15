@@ -19,7 +19,7 @@
       "Lifecycle": {},
       "Artifacts": [
         {
-          "URI": "s3://aws.greengrass.clientdevices.mqtt.Bridge.jar"
+          "URI": "s3://com.bolt-data.iot.MqttBridge.jar"
         }
       ]
     }

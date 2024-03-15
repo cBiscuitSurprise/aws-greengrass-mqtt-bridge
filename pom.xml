@@ -67,7 +67,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.22</version>
+            <version>1.18.30</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -371,7 +371,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <skipTests>false</skipTests>
         <groups></groups>
-        <mqttbridgejar.name>aws.greengrass.clientdevices.mqtt.Bridge</mqttbridgejar.name>
+        <mqttbridgejar.name>com.bolt-data.iot.MqttBridge</mqttbridgejar.name>
     </properties>
     <distributionManagement>
         <snapshotRepository>

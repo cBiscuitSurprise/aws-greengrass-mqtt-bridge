@@ -34,7 +34,7 @@ def deploy(version: str):
 
     print(f"uploading recipe-template to bucket: {bucket}")
     template_file = create_recipe_template(
-        f"greengrass-build/recipes/aws.greengrass.clientdevices.mqtt.Bridge-{version}.json",
+        f"greengrass-build/recipes/com.bolt-data.iot.MqttBridge-{version}.json",
         bucket,
     )
     upload_recipe_template(component_name, version, template_file, bucket)

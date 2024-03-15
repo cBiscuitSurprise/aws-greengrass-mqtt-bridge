@@ -46,7 +46,7 @@ import javax.inject.Inject;
 
 @ImplementsService(name = MQTTBridge.SERVICE_NAME)
 public class MQTTBridge extends PluginService {
-    public static final String SERVICE_NAME = "aws.greengrass.clientdevices.mqtt.Bridge";
+    public static final String SERVICE_NAME = "com.bolt-data.iot.MqttBridge";
 
     @Getter(AccessLevel.PACKAGE) // Getter for unit tests
     private final TopicMapping topicMapping;

@@ -1,3 +1,72 @@
+- We use this component only for "simulator" (not for virtual gateway)
+
+- To install the latest version, we have upgraded other component version as well.
+
+```bash
+    aws.greengrass.Nucleus	2.9.3
+    aws.greengrass.StreamManager	2.1.6
+    aws.greengrass.clientdevices.Auth	2.4.1
+    aws.greengrass.clientdevices.mqtt.Moquette	2.3.2
+```
+
+```bash
+    aws.greengrass.ShadowManager	2.3.2
+    aws.greengrass.clientdevices.IPDetector	2.1.6
+```
+
+- Configuration to merge, when you deploy/revise
+
+```json
+{
+    "mqttTopicMapping": {
+        "forwardAllMqttToIpc": {
+            "source": "LocalMqtt",
+            "sourceTopic": "#",
+            "targetTopic": "connector.mqtts.message.input",
+            "target": "Pubsub",
+            "targetPayloadTemplate": "{\"topic\": \"${sourceTopic}\", \"payload\": \"${sourcePayload:base64}\"}"
+        },
+        "ShadowsLocalMqttToPubsub": {
+            "topic": "$aws/things/+/shadow/#",
+            "source": "LocalMqtt",
+            "target": "Pubsub"
+        },
+        "ShadowsPubsubToLocalMqtt": {
+            "topic": "$aws/things/+/shadow/#",
+            "source": "Pubsub",
+            "target": "LocalMqtt"
+        }
+    }
+}
+```
+
+
+# how to build component locally and deploy
+
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+- Build component 
+
+```bash
+  gdk component build
+```
+
+- Deploy Component
+
+```bash
+python scripts/deploy.py --version <version-number>
+```
+
+
+
+
+
+
 🧙🧙🧙 magic
 This is a patch which allows us to publish to our accounts rather than use the global AWS version of this component. See [BDC_README.md](BDC_README.md) for more info.
 🧙🧙🧙
