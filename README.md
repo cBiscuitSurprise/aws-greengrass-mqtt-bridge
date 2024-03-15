@@ -1,4 +1,6 @@
-- We use this component only for "simulator" (not for virtual gateway)
+- We use this component only for "simulator" (not for virtual gateway).
+
+- This component name is revised from `aws.greengrass.clientdevices.mqtt.Bridge` -> `com.bolt-data.iot.MqttBridge`
 
 - To install the latest version, we have upgraded other component version as well.
 
